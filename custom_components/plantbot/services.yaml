@@ -1,0 +1,23 @@
+water_station:
+  name: Station bewässern
+  description: Starte die Bewässerung einer bestimmten Station und eines bestimmten Ventils.
+  fields:
+    valve:
+      name: Ventil
+      description: Wähle ein Ventil aus deiner Installation
+      required: true
+      selector:
+        entity:
+          domain: valve
+          integration: plantbot
+    volume:
+      name: Volumen (ml)
+      description: Menge in Milliliter
+      required: true
+      example: 500
+      selector:
+        number:
+          min: 1
+          unit_of_measurement: ml
+          mode: slider
+          step: 50
