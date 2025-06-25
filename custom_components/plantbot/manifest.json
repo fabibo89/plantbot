@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://github.com/dein-benutzername/plantbot",
   "dependencies": [],
-  "codeowners": ["@dein-benutzername"],
+  "codeowners": ["@fabibo89"],
   "requirements": ["aiohttp"]
 }
