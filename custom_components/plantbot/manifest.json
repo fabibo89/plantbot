@@ -1,11 +1,10 @@
 {
   "domain": "plantbot",
-  "name": "Plant Bot",
+  "name": "PlantBot Bewässerung",
   "version": "1.0.0",
-  "documentation": "https://example.com/plantbot-docs",
-  "requirements": ["requests"],
-  "codeowners": ["Fabian Bosch"],
-  "iot_class": "local_push",
   "config_flow": true,
-  "logo": "logo.png"
+  "documentation": "https://github.com/dein-benutzername/plantbot",
+  "dependencies": [],
+  "codeowners": ["@dein-benutzername"],
+  "requirements": ["aiohttp"]
 }

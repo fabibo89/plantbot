@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Verbindung einrichten",
+        "description": "Gib die Serveradresse deines PlantBot-Systems ein.",
+        "data": {
+          "server": "Server-URL"
+        }
+      }
+    }
+  }
+}

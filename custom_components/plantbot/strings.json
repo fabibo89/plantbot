@@ -1,0 +1,16 @@
+{
+  "domain": "plantbot",
+  "name": "PlantBot Bewässerung",
+  "config_flow": {
+    "title": "PlantBot Server",
+    "step": {
+      "user": {
+        "title": "Verbindung einrichten",
+        "description": "Gib die Serveradresse deines PlantBot-Systems ein.",
+        "data": {
+          "server": "Server-URL"
+        }
+      }
+    }
+  }
+}
