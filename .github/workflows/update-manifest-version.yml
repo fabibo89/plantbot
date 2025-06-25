@@ -12,7 +12,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-	  token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.GH_PAT }}
 
       - name: Extract version from release tag
         id: get_version
