@@ -8,7 +8,7 @@ from .valve import ENTITIES
 
 import asyncio
 
-PLATFORMS = ["valve", "sensor", "text"]
+PLATFORMS = ["valve", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):

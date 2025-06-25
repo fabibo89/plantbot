@@ -78,7 +78,7 @@ class PlantbotValve(ValveEntity):
         self.async_write_ha_state()
 
         await super().async_added_to_hass()
-        _LOGGER.warning("async_added_to_hass %s", self.entity_id)
+        _LOGGER.debug("async_added_to_hass %s", self.entity_id)
         if self.entity_id:
             ENTITIES[self.entity_id] = self
             _LOGGER.debug("Registriere Valve: %s → entity_id: %s", self.valve_name, self.entity_id)
@@ -126,6 +126,7 @@ class PlantbotValve(ValveEntity):
 
     async def open_for_volume(self,volume):
         url = f"{self.coordinator.server_url}/HA/valve/{self.valve_id}/open?volume={volume}"
+        _LOGGER.debug(url)
         try:
             async with self.coordinator.session.get(url, ssl=False, timeout=10) as resp:
                 if resp.status != 200:
