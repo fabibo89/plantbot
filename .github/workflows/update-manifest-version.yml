@@ -2,30 +2,37 @@ name: Update manifest version
 
 on:
   release:
-    types: [created]
+    types: [published]
 
 jobs:
   update-manifest:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repo
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          python-version: "3.11"
+          token: ${{ secrets.GH_PAT }}  # Personal Access Token mit `workflow`-Scope
+
+      - name: Extract version from release tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF##*/}
+          echo "Extracted version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Update manifest.json version
         run: |
-          tag=${GITHUB_REF#refs/tags/}
-          jq --arg version "$tag" '.version = $version' custom_components/plantbot/manifest.json > temp.json && mv temp.json custom_components/plantbot/manifest.json
+          jq '.version = "${{ steps.get_version.outputs.version }}"' custom_components/plantbot/manifest.json > tmp.json
+          mv tmp.json custom_components/plantbot/manifest.json
 
-      - name: Commit and push updated manifest
+      - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "Update manifest version to $tag"
-          git push
+          git commit -am "Update manifest version to ${{ steps.get_version.outputs.version }}" || echo "No changes to commit"
+
+      - name: Push changes to main
+        run: |
+          git push origin HEAD:main
 
