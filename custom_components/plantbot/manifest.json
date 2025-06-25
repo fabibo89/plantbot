@@ -1,10 +1,14 @@
 {
   "domain": "plantbot",
   "name": "PlantBot Bewässerung",
-  "version": "0.1.0",
+  "version": "v0.1.8",
   "config_flow": true,
   "documentation": "https://github.com/@fabibo89/plantbot",
   "dependencies": [],
-  "codeowners": ["@fabibo89"],
-  "requirements": ["aiohttp"]
+  "codeowners": [
+    "@fabibo89"
+  ],
+  "requirements": [
+    "aiohttp"
+  ]
 }
