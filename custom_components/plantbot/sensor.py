@@ -29,6 +29,9 @@ class PlantbotSensor(SensorEntity):
         self._attr_unique_id = f"{station_id}_{key}"
         self._attr_native_unit_of_measurement = props["unit"]
         self._optional = props["optional"]
+        # if self.key == "temperature":
+        #     self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        #     self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS        
 
     @property
     def native_value(self):

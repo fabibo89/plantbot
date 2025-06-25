@@ -1,6 +1,24 @@
-water_station:
-  name: Station bewässern
-  description: Starte die Bewässerung einer bestimmten Station und eines bestimmten Ventils.
+open_for_seconds:
+  name: Öffne für Sekunden
+  description: Öffnet ein Ventil für eine bestimmte Zeitdauer.
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          domain: valve
+    duration:
+      required: true
+      example: 10
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: Sekunden
+
+open_for_volume:
+  name: Öffne für Volumen
+  description: Öffnet ein Ventil, bis eine bestimmte Menge Wasser geflossen ist.
   fields:
     valve:
       name: Ventil
@@ -11,13 +29,10 @@ water_station:
           domain: valve
           integration: plantbot
     volume:
-      name: Volumen (ml)
-      description: Menge in Milliliter
       required: true
-      example: 500
+      example: 5
       selector:
         number:
           min: 1
+          step: 5000
           unit_of_measurement: ml
-          mode: slider
-          step: 50
