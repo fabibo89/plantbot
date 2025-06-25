@@ -1,0 +1,31 @@
+name: Update manifest version
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  update-manifest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Update manifest.json version
+        run: |
+          tag=${GITHUB_REF#refs/tags/}
+          jq --arg version "$tag" '.version = $version' custom_components/plantbot/manifest.json > temp.json && mv temp.json custom_components/plantbot/manifest.json
+
+      - name: Commit and push updated manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Update manifest version to $tag"
+          git push
+
