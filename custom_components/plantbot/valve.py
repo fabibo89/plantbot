@@ -1,5 +1,5 @@
 import logging
-from homeassistant.components.valve import ValveEntity
+from homeassistant.components.valve import ValveEntity,ValveEntityFeature
 from .const import DOMAIN
 from homeassistant.core import callback
 from homeassistant.components.valve import ValveDeviceClass
@@ -35,8 +35,12 @@ class PlantbotValve(ValveEntity):
         self._attr_unique_id = f"plantbot_{self.valve_id}" 
         self._attr_reports_position = False
         self._attr_supported_features = 0
-        self._read_only = True
+        self._read_only = False
         self._attr_should_poll = False
+        self._attr_supported_features = (
+            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+        )
+
         #self._attr_available = True        
         self._attr_device_class = ValveDeviceClass.WATER
 
@@ -88,7 +92,8 @@ class PlantbotValve(ValveEntity):
 
     
     async def _send_command(self, state):
-        url = f"{self.coordinator.server_url}/api/valve/{self.valve_id}/{state}"
+        url = f"{self.coordinator.server_url}/HA/valve/{state}?id={self.valve_id}"
+        _LOGGER.debug(url)
         async with self.coordinator.session.get(url) as resp:
             if resp.status == 200:
                 await self.coordinator.async_request_refresh()
@@ -125,7 +130,8 @@ class PlantbotValve(ValveEntity):
                 await coordinator.async_request_refresh()
 
     async def open_for_volume(self,volume):
-        url = f"{self.coordinator.server_url}/HA/valve/{self.valve_id}/open?volume={volume}"
+        url = f"{self.coordinator.server_url}/HA/valve/open?id={self.valve_id}&volume={volume}"
+        #http://192.168.10.77/HA/valve/open?id=1&volume=300
         _LOGGER.debug(url)
         try:
             async with self.coordinator.session.get(url, ssl=False, timeout=10) as resp:

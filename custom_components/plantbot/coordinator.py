@@ -28,7 +28,7 @@ class PlantbotCoordinator(DataUpdateCoordinator):
                 if raw["status"] != "success":
                     _LOGGER.error("PlantBot-API-Fehler: %s", raw)
                     raise UpdateFailed("Antwortstatus war nicht 'success'")
-                stations = raw["data"][0]
+                stations = raw["data"]
                 #_LOGGER.debug("Empfangene Daten vom Server: %s", raw)
                 return {f"station_{station['id']}": station for station in stations}
         except Exception as err:

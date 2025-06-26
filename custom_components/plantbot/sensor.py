@@ -2,6 +2,7 @@ import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import UnitOfTemperature, PERCENTAGE
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,8 +13,11 @@ SENSOR_TYPES = {
     "temperature": {"name": "Temperatur", "unit": UnitOfTemperature.CELSIUS, "optional": True},
     "humidity": {"name": "Feuchtigkeit", "unit": PERCENTAGE, "optional": True},
     "water_level": {"name": "Wasserstand", "unit": PERCENTAGE, "optional": True},
-    "jobs": {"name": "Jobs", "unit": None, "optional": False},
+    "jobs": {"name": "Jobs", "unit": None, "optional": True},
+    "flow": {"name": "Flow", "unit": None, "optional": True},
+    "lastVolume": {"name": "Volume", "unit": 'ml', "optional": True},
     "status": {"name": "Status", "unit": None, "optional": False},
+    "wifi": {"name": "WIFI", "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT, "optional": False},
 }
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -27,6 +31,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
             if not props["optional"] or key in station:
                 if props["optional"] and (value is None or value == "" or value == "null"):
                     continue  # Überspringe leere Temperaturdaten
+                _LOGGER.debug(
+                "Füge Sensor hinzu: station_id=%s, typ=%s, name=%s",
+                station_id, key, props["name"]
+                )
                 entities.append(PlantbotSensor(coordinator, station_id, key, props, station["name"]))
 
     async_add_entities(entities)
@@ -49,7 +57,14 @@ class PlantbotSensor(SensorEntity):
         if key == "jobs":
             self._attr_device_class = None
             self._attr_native_unit_of_measurement = "Aufträge"
-            self._attr_state_class = SensorStateClass.MEASUREMENT            
+            self._attr_state_class = SensorStateClass.MEASUREMENT    
+        if key == "flow":
+            self._attr_state_class = SensorStateClass.TOTAL
+        if key == "lastVolume":
+            self._attr_state_class = SensorStateClass.MEASUREMENT   
+        if key == "wifi":
+            self._attr_state_class = SensorDeviceClass.SIGNAL_STRENGTH
+        
         self._attr_editable = False  # Das macht's read-only        
 
 

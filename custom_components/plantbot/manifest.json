@@ -3,7 +3,7 @@
   "name": "PlantBot Bewässerung",
   "version": "v0.1.9",
   "config_flow": true,
-  "documentation": "https://github.com/@fabibo89/plantbot",
+  "documentation": "https://github.com/fabibo89/plantbot",
   "dependencies": [],
   "codeowners": [
     "@fabibo89"
