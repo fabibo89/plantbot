@@ -3,6 +3,7 @@ from datetime import timedelta
 import aiohttp
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from .const import DOMAIN
+import json
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,9 +29,49 @@ class PlantbotCoordinator(DataUpdateCoordinator):
                 if raw["status"] != "success":
                     _LOGGER.error("PlantBot-API-Fehler: %s", raw)
                     raise UpdateFailed("Antwortstatus war nicht 'success'")
-                stations = raw["data"]
+                basis_data = raw["data"]
                 #_LOGGER.debug("Empfangene Daten vom Server: %s", raw)
-                return {f"station_{station['id']}": station for station in stations}
+                #return {f"station_{station['id']}": station for station in stations}
+                result = {f"station_{station['id']}": station for station in basis_data}
+
+                for station in basis_data:
+                    source = station.get("source", "server")
+                    ip = station.get("ip")
+                    station_id = station['id']
+                    station_name = station['name']
+                    result = {f"station_{station['id']}": station for station in basis_data}
+                    
+                    _LOGGER.debug("Folgende station wird angeschut %s - %s ", station_id, ip)
+                    
+                    if source == "server":
+                        _LOGGER.debug(" wir gehen rein für IP %s über %s", ip,f"http://{ip}/HA/stations")
+                        try:
+                            async with self.session.get(f"http://{ip}/HA/stations", timeout=5) as dev_resp:
+                                if dev_resp.status == 200:
+                                    device_raw = await dev_resp.json()
+                                    device_data = device_raw["data"][0]
+                                    if raw["status"] != "success":
+                                        _LOGGER.error("PlantBot-API-Fehler (Device): %s", device_raw)
+                                    _LOGGER.debug("Statusdaten von Gerät %s für %s aktualisiert", ip, station_id)
+                                    key_station_id=f"station_{station['id']}"
+                                    result[key_station_id].update({
+                                        "wifi": device_data.get("wifi"),
+                                        "temperature": device_data.get("temperature"),
+                                        "humidity": device_data.get("humidity"),
+                                        "status": device_data.get("status")
+                                    })
+
+                                    _LOGGER.debug("Device Data:\n%s", json.dumps(device_data, indent=2))
+
+                                else:
+                                    _LOGGER.warning("Gerät %s antwortet nicht wie erwartet (%s)", ip, dev_resp.status)
+                        except Exception as e:
+                            _LOGGER.warning("Fehler beim Statusabruf von Gerät %s: %s", ip, e)                        
+
+                return result
+        
+
         except Exception as err:
             _LOGGER.exception("Fehler bei der Kommunikation mit PlantBot:")
             raise UpdateFailed(f"Fehler: {err}")
+        

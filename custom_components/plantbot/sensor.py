@@ -15,7 +15,7 @@ SENSOR_TYPES = {
     "water_level": {"name": "Wasserstand", "unit": PERCENTAGE, "optional": True},
     "jobs": {"name": "Jobs", "unit": None, "optional": True},
     "flow": {"name": "Flow", "unit": None, "optional": True},
-    "lastVolume": {"name": "Volume", "unit": 'ml', "optional": True},
+    "lastVolume": {"name": "Volume", "unit": 'L', "optional": True},
     "status": {"name": "Status", "unit": None, "optional": False},
     "wifi": {"name": "WIFI", "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT, "optional": False},
 }
@@ -63,7 +63,8 @@ class PlantbotSensor(SensorEntity):
         if key == "lastVolume":
             self._attr_state_class = SensorStateClass.MEASUREMENT   
         if key == "wifi":
-            self._attr_state_class = SensorDeviceClass.SIGNAL_STRENGTH
+            self._attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
+
         
         self._attr_editable = False  # Das macht's read-only        
 
