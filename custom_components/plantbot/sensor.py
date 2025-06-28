@@ -3,6 +3,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import UnitOfTemperature, PERCENTAGE
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import UnitOfPressure
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,6 +13,7 @@ from .const import DOMAIN
 SENSOR_TYPES = {
     "temperature": {"name": "Temperatur", "unit": UnitOfTemperature.CELSIUS, "optional": True},
     "humidity": {"name": "Feuchtigkeit", "unit": PERCENTAGE, "optional": True},
+    "pressure": {"name": "Luftdruck", "unit": UnitOfPressure.HPA, "optional": True},
     "water_level": {"name": "Wasserstand", "unit": PERCENTAGE, "optional": True},
     "jobs": {"name": "Jobs", "unit": None, "optional": True},
     "flow": {"name": "Flow", "unit": None, "optional": True},
