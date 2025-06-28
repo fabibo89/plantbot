@@ -64,7 +64,7 @@ class PlantbotSensor(SensorEntity):
             self._attr_state_class = SensorStateClass.MEASUREMENT   
         if key == "wifi":
             self._attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
-
+            self._attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
         
         self._attr_editable = False  # Das macht's read-only        
 
