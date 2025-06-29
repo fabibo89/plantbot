@@ -40,11 +40,11 @@ class PlantbotCoordinator(DataUpdateCoordinator):
                     station_id = station['id']
                     station_name = station['name']
                     result = {f"station_{station['id']}": station for station in basis_data}
-                    
-                    _LOGGER.debug("Folgende station wird angeschut %s - %s ", station_id, ip)
+                    #_LOGGER.debug(" Data:\n%s", json.dumps(result, indent=2))
+                    #_LOGGER.debug("Folgende station wird angeschut %s - %s ", station_id, ip)
                     
                     if source == "server":
-                        _LOGGER.debug(" wir gehen rein für IP %s über %s", ip,f"http://{ip}/HA/stations")
+                        #_LOGGER.debug(" wir gehen rein für IP %s über %s", ip,f"http://{ip}/HA/stations")
                         try:
                             async with self.session.get(f"http://{ip}/HA/stations", timeout=5) as dev_resp:
                                 if dev_resp.status == 200:
@@ -58,10 +58,13 @@ class PlantbotCoordinator(DataUpdateCoordinator):
                                         "wifi": device_data.get("wifi"),
                                         "temperature": device_data.get("temperature"),
                                         "humidity": device_data.get("humidity"),
-                                        "status": device_data.get("status")
+                                        "status": device_data.get("status"),
+                                        "current_version": device_data.get("current_version"),
+                                        "latestVersion": device_data.get("latestVersion"),
+                                        "update_needed": device_data.get("update_needed"),                                        
                                     })
 
-                                    _LOGGER.debug("Device Data:\n%s", json.dumps(device_data, indent=2))
+                                    #_LOGGER.debug("Device Data:\n%s", json.dumps(device_data, indent=2))
 
                                 else:
                                     _LOGGER.warning("Gerät %s antwortet nicht wie erwartet (%s)", ip, dev_resp.status)

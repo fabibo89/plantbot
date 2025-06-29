@@ -19,7 +19,10 @@ SENSOR_TYPES = {
     "flow": {"name": "Flow", "unit": None, "optional": True},
     "lastVolume": {"name": "Volume", "unit": 'L', "optional": True},
     "status": {"name": "Status", "unit": None, "optional": False},
-    "wifi": {"name": "WIFI", "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT, "optional": False},
+    #"current_version": {"name": "aktuelle Version", "unit": None, "optional": False},
+    #"latestVersion": {"name": "verfügbare Version", "unit": None, "optional": False},
+    #"update_needed": {"name": "Update benötigt", "unit": None, "optional": False},
+    "wifi": {"name": "WIFI", "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT, "optional": False}
 }
 
 async def async_setup_entry(hass, entry, async_add_entities):
