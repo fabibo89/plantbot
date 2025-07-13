@@ -11,18 +11,18 @@ _LOGGER = logging.getLogger(__name__)
 from .const import DOMAIN
 
 SENSOR_TYPES = {
-    "temperature": {"name": "Temperatur", "unit": UnitOfTemperature.CELSIUS, "optional": True},
-    "humidity": {"name": "Feuchtigkeit", "unit": PERCENTAGE, "optional": True},
-    "pressure": {"name": "Luftdruck", "unit": UnitOfPressure.HPA, "optional": True},
-    "water_level": {"name": "Wasserstand", "unit": PERCENTAGE, "optional": True},
-    "jobs": {"name": "Jobs", "unit": None, "optional": True},
-    "flow": {"name": "Flow", "unit": None, "optional": True},
-    "lastVolume": {"name": "Volume", "unit": 'L', "optional": True},
-    "status": {"name": "Status", "unit": None, "optional": False},
+    "temperature": {"name": "Temperatur", "unit": UnitOfTemperature.CELSIUS,"device_class":SensorDeviceClass.TEMPERATURE , "optional": True},
+    "humidity": {"name": "Feuchtigkeit", "unit": PERCENTAGE,"device_class":SensorDeviceClass.HUMIDITY, "optional": True},
+    "pressure": {"name": "Luftdruck", "unit": UnitOfPressure.HPA,"device_class":None, "optional": True},
+    "water_level": {"name": "Wasserstand", "unit": PERCENTAGE,"device_class":None, "optional": True},
+    "jobs": {"name": "Jobs", "unit": None,"device_class":SensorStateClass.MEASUREMENT  , "optional": True},
+    "flow": {"name": "Flow", "unit": None,"device_class":SensorStateClass.TOTAL, "optional": True},
+    "lastVolume": {"name": "Volume", "unit": 'ml',"device_class":SensorStateClass.MEASUREMENT  , "optional": True},
+    "status": {"name": "Status", "unit": None,"device_class":None, "optional": False},
     #"current_version": {"name": "aktuelle Version", "unit": None, "optional": False},
     #"latestVersion": {"name": "verfügbare Version", "unit": None, "optional": False},
     #"update_needed": {"name": "Update benötigt", "unit": None, "optional": False},
-    "wifi": {"name": "WIFI", "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT, "optional": False}
+    "wifi": {"name": "WIFI", "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,"device_class":SensorDeviceClass.SIGNAL_STRENGTH, "optional": False},
 }
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -30,7 +30,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
 
     for station_id, station in coordinator.data.items():
-        #entities.append(PlantbotStatusSensor(coordinator, station_id, station["name"]))
+        #Feste Sensoren
         for key, props in SENSOR_TYPES.items():
             value = station.get(key)
             if not props["optional"] or key in station:
@@ -41,6 +41,44 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 station_id, key, props["name"]
                 )
                 entities.append(PlantbotSensor(coordinator, station_id, key, props, station["name"]))
+
+        #Modbus-Sensoren
+        modbus_sens = station.get("modbusSens", {})
+        for addr, values in modbus_sens.items():
+            addr_str = str(addr)
+            if "hum" in values:
+                entities.append(
+                    PlantbotSensor(
+                        coordinator,
+                        station_id,
+                        f"soil_hum_{addr_str}",
+                        {
+                            "name": f"Bodenfeuchtigkeit {addr_str}",
+                            "unit": PERCENTAGE,
+                            "optional": True,
+                            "device_class": SensorDeviceClass.HUMIDITY,
+                        },
+                        station["name"]
+                    )
+                )
+                _LOGGER.debug("Füge Modbus-Sensor hinzu: station_id=%s, addr=%s, typ=%s", station_id, addr_str, "temp")
+
+            if "temp" in values:
+                entities.append(
+                    PlantbotSensor(
+                        coordinator,
+                        station_id,
+                        f"soil_temp_{addr_str}",
+                        {
+                            "name": f"Bodentemperatur {addr_str}",
+                            "unit": UnitOfTemperature.CELSIUS,
+                            "optional": True,
+                            "device_class": SensorDeviceClass.TEMPERATURE,
+                        },
+                        station["name"]
+                    )
+                )              
+                _LOGGER.debug("Füge Modbus-Sensor hinzu: station_id=%s, addr=%s, typ=%s", station_id, addr_str, "hum")
 
     async_add_entities(entities)
 
@@ -55,31 +93,23 @@ class PlantbotSensor(SensorEntity):
         self._attr_unique_id = f"{station_id}_{key}"
         self._attr_native_unit_of_measurement = props["unit"]
         self._optional = props["optional"]
-        if self.key == "temperature":
-            self._attr_device_class = SensorDeviceClass.TEMPERATURE
-        if self.key == "humidity":
-            self._attr_device_class = SensorDeviceClass.HUMIDITY
-        if key == "jobs":
-            self._attr_device_class = None
-            self._attr_native_unit_of_measurement = "Aufträge"
-            self._attr_state_class = SensorStateClass.MEASUREMENT    
-        if key == "flow":
-            self._attr_state_class = SensorStateClass.TOTAL
-        if key == "lastVolume":
-            self._attr_state_class = SensorStateClass.MEASUREMENT   
-        if key == "wifi":
-            self._attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
-            self._attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-        
         self._attr_editable = False  # Das macht's read-only        
+        self._attr_device_class = props["device_class"]
 
 
     @property
     def native_value(self):
-        value = self.coordinator.data[self.station_id].get(self.key)
-        if value is None and not self._optional:
-            return 0
-        return value
+        if "soil_hum" in self.key or "soil_temp" in self.key:
+            # Dynamische Modbus-Sensoren
+            modbus = self.coordinator.data[self.station_id].get("modbusSens", {})
+            parts = self.key.rsplit("_", 1)
+            if len(parts) == 2:
+                addr = parts[1]
+                key_type = "hum" if "hum" in self.key else "temp"
+                return modbus.get(addr, {}).get(key_type)
+            return None
+        else:
+            return self.coordinator.data[self.station_id].get(self.key)
 
     @property
     def available(self):

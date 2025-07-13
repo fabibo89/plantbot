@@ -4,6 +4,8 @@ import aiohttp
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from .const import DOMAIN
 import json
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import asyncio
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -11,7 +13,7 @@ class PlantbotCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, server_url):
         self.hass = hass
         self.server_url = server_url
-        self.session = aiohttp.ClientSession()
+        self.session = async_get_clientsession(hass)
         super().__init__(
             hass,
             _LOGGER,
@@ -22,6 +24,7 @@ class PlantbotCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         try:
             async with self.session.get(f"{self.server_url}/HA/stations",ssl=False) as response:
+                _LOGGER.debug("Empfangene Daten vom Server: %s", f"{self.server_url}/HA/stations")
                 if response.status != 200:
                     _LOGGER.error("HTTP-Fehler beim Abrufen der Daten: %s", response.status)
                     raise UpdateFailed(f"Status {response.status}")
@@ -44,7 +47,7 @@ class PlantbotCoordinator(DataUpdateCoordinator):
                     #_LOGGER.debug("Folgende station wird angeschut %s - %s ", station_id, ip)
                     
                     if source == "server":
-                        #_LOGGER.debug(" wir gehen rein für IP %s über %s", ip,f"http://{ip}/HA/stations")
+                        _LOGGER.debug(" wir gehen rein für IP %s über %s", ip,f"http://{ip}/HA/stations")
                         try:
                             async with self.session.get(f"http://{ip}/HA/stations", timeout=5) as dev_resp:
                                 if dev_resp.status == 200:
@@ -62,9 +65,10 @@ class PlantbotCoordinator(DataUpdateCoordinator):
                                         "current_version": device_data.get("current_version"),
                                         "latestVersion": device_data.get("latestVersion"),
                                         "update_needed": device_data.get("update_needed"),                                        
+                                        "modbusSens": device_data.get("modbusSens") or {}                                      
                                     })
 
-                                    #_LOGGER.debug("Device Data:\n%s", json.dumps(device_data, indent=2))
+                                    _LOGGER.debug("Device Data:\n%s", json.dumps(device_data, indent=2))
 
                                 else:
                                     _LOGGER.warning("Gerät %s antwortet nicht wie erwartet (%s)", ip, dev_resp.status)
@@ -74,7 +78,13 @@ class PlantbotCoordinator(DataUpdateCoordinator):
                 return result
         
 
+        except asyncio.CancelledError:
+            _LOGGER.warning("Abbruch während Datenabruf – vermutlich durch Shutdown oder Timeout")
+            raise
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Verbindung zu PlantBot fehlgeschlagen: %s", err)
+            raise UpdateFailed from err
         except Exception as err:
             _LOGGER.exception("Fehler bei der Kommunikation mit PlantBot:")
             raise UpdateFailed(f"Fehler: {err}")
-        
+
