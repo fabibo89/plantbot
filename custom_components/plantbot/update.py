@@ -48,6 +48,7 @@ class PlantbotFirmwareUpdate(UpdateEntity):
             name=self.station_name,
             manufacturer="PlantBot",
             model="Bewässerungsstation",
+            configuration_url= f"http://{self._station_ip}"
         )
 
         _LOGGER.debug("###################FirmwareUpdate-Entität erstellt für %s", self.station_id)

@@ -40,6 +40,7 @@ class PlantbotValve(ValveEntity):
         self._attr_supported_features = (
             ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
         )
+        self.station_ip = coordinator.data[self.station_id].get("ip")
 
         #self._attr_available = True        
         self._attr_device_class = ValveDeviceClass.WATER
@@ -117,6 +118,7 @@ class PlantbotValve(ValveEntity):
             "name": self.station_name,
             "manufacturer": "PlantBot",
             "model": "Bewässerungsstation",
+            "configuration_url": f"http://{self.station_ip}"
         }
     
     async def open_for_seconds(self, duration):

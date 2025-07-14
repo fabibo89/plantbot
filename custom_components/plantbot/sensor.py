@@ -11,18 +11,15 @@ _LOGGER = logging.getLogger(__name__)
 from .const import DOMAIN
 
 SENSOR_TYPES = {
-    "temperature": {"name": "Temperatur", "unit": UnitOfTemperature.CELSIUS,"device_class":SensorDeviceClass.TEMPERATURE , "optional": True},
-    "humidity": {"name": "Feuchtigkeit", "unit": PERCENTAGE,"device_class":SensorDeviceClass.HUMIDITY, "optional": True},
-    "pressure": {"name": "Luftdruck", "unit": UnitOfPressure.HPA,"device_class":None, "optional": True},
-    "water_level": {"name": "Wasserstand", "unit": PERCENTAGE,"device_class":None, "optional": True},
-    "jobs": {"name": "Jobs", "unit": None,"device_class":SensorStateClass.MEASUREMENT  , "optional": True},
-    "flow": {"name": "Flow", "unit": None,"device_class":SensorStateClass.TOTAL, "optional": True},
-    "lastVolume": {"name": "Volume", "unit": 'ml',"device_class":SensorStateClass.MEASUREMENT  , "optional": True},
+    "temperature": {"name": "Temperatur", "unit": UnitOfTemperature.CELSIUS,"device_class":SensorDeviceClass.TEMPERATURE ,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
+    "humidity": {"name": "Feuchtigkeit", "unit": PERCENTAGE,"device_class":SensorDeviceClass.HUMIDITY,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
+    "pressure": {"name": "Luftdruck", "unit": UnitOfPressure.HPA,"device_class":None, "state_class": SensorStateClass.MEASUREMENT,"optional": True},
+    "water_level": {"name": "Wasserstand", "unit": PERCENTAGE,"device_class":None,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
+    "jobs": {"name": "Jobs", "unit": "count","device_class":None  , "state_class": SensorStateClass.MEASUREMENT,"optional": True},
+    "flow": {"name": "Flow", "unit": None,"device_class":None, "state_class": SensorStateClass.TOTAL,"optional": True},
+    "lastVolume": {"name": "Volume", "unit": 'ml',"device_class":None ,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
     "status": {"name": "Status", "unit": None,"device_class":None, "optional": False},
-    #"current_version": {"name": "aktuelle Version", "unit": None, "optional": False},
-    #"latestVersion": {"name": "verfügbare Version", "unit": None, "optional": False},
-    #"update_needed": {"name": "Update benötigt", "unit": None, "optional": False},
-    "wifi": {"name": "WIFI", "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,"device_class":SensorDeviceClass.SIGNAL_STRENGTH, "optional": False},
+    "wifi": {"name": "WIFI", "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,"device_class":SensorDeviceClass.SIGNAL_STRENGTH,"state_class": SensorStateClass.MEASUREMENT, "optional": False},
 }
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -57,6 +54,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
                             "unit": PERCENTAGE,
                             "optional": True,
                             "device_class": SensorDeviceClass.HUMIDITY,
+                            "state_class": SensorStateClass.MEASUREMENT,
+
                         },
                         station["name"]
                     )
@@ -74,6 +73,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                             "unit": UnitOfTemperature.CELSIUS,
                             "optional": True,
                             "device_class": SensorDeviceClass.TEMPERATURE,
+                            "state_class": SensorStateClass.MEASUREMENT,
                         },
                         station["name"]
                     )
@@ -95,10 +95,15 @@ class PlantbotSensor(SensorEntity):
         self._optional = props["optional"]
         self._attr_editable = False  # Das macht's read-only        
         self._attr_device_class = props["device_class"]
+        self._attr_state_class = props.get("state_class")
+        self.station_ip = coordinator.data[self.station_id].get("ip")
+        _LOGGER.debug("##### IP=%s", self.station_ip)
 
 
     @property
     def native_value(self):
+        if not self.available:
+            return None        
         if "soil_hum" in self.key or "soil_temp" in self.key:
             # Dynamische Modbus-Sensoren
             modbus = self.coordinator.data[self.station_id].get("modbusSens", {})
@@ -117,48 +122,18 @@ class PlantbotSensor(SensorEntity):
 
     @property
     def device_info(self):
-        return {
+        info = {
             "identifiers": {(DOMAIN, f"station_{self.station_id}")},
             "name": self.station_name,
             "manufacturer": "PlantBot",
             "model": "Bewässerungsstation",
         }
+        if self.station_ip:
+            info["configuration_url"] = f"http://{self.station_ip}"
+        return info
 
     async def async_update(self):
         await self.coordinator.async_request_refresh()
 
     async def async_added_to_hass(self):
         self.coordinator.async_add_listener(self.async_write_ha_state)
-
-
-class PlantbotStatusSensor(SensorEntity):
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, f"station_{self.station_id}")},
-            "name": self.station_name,
-            "manufacturer": "PlantBot",
-            "model": "Bewässerungsstation",
-        }
-    def __init__(self, coordinator, station_id, station_name):
-        self.coordinator = coordinator
-        self.station_id = str(station_id)
-        self.station_name = station_name
-        self._attr_name = "Status"
-        self._attr_unique_id = f"plantbot_text_{self.station_id}_status"
-        self._attr_editable = False  # Das macht's read-only        
-        _LOGGER.debug("Alle registrierten Stati:\n%s", station_name)
-
-    @property
-    def native_value(self):
-        return self.coordinator.data[self.station_id].get("status", "Unbekannt")
-
-    @property
-    def available(self):
-        return self.coordinator.last_update_success
-
-    async def async_update(self):
-        await self.coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self):
-        self.coordinator.async_add_listener(self.async_write_ha_state)        

@@ -60,7 +60,7 @@ class PlantbotCoordinator(DataUpdateCoordinator):
                                     result[key_station_id].update({
                                         "wifi": device_data.get("wifi"),
                                         "temperature": device_data.get("temperature"),
-                                        "humidity": device_data.get("humidity"),
+                                        "humidity": device_data.get("humidity") or {} ,
                                         "status": device_data.get("status"),
                                         "current_version": device_data.get("current_version"),
                                         "latestVersion": device_data.get("latestVersion"),
@@ -68,23 +68,28 @@ class PlantbotCoordinator(DataUpdateCoordinator):
                                         "modbusSens": device_data.get("modbusSens") or {}                                      
                                     })
 
-                                    _LOGGER.debug("Device Data:\n%s", json.dumps(device_data, indent=2))
+                                    #_LOGGER.debug("Device Data:\n%s", json.dumps(device_data, indent=2))
 
                                 else:
+                                    self.last_update_success = False
                                     _LOGGER.warning("Gerät %s antwortet nicht wie erwartet (%s)", ip, dev_resp.status)
                         except Exception as e:
-                            _LOGGER.warning("Fehler beim Statusabruf von Gerät %s: %s", ip, e)                        
+                            _LOGGER.warning("Fehler beim Statusabruf von Gerät %s: %s", ip, e)
+                            self.last_update_success = False
 
                 return result
         
 
         except asyncio.CancelledError:
             _LOGGER.warning("Abbruch während Datenabruf – vermutlich durch Shutdown oder Timeout")
+            self.last_update_success = False
             raise
         except aiohttp.ClientError as err:
             _LOGGER.error("Verbindung zu PlantBot fehlgeschlagen: %s", err)
+            self.last_update_success = False
             raise UpdateFailed from err
         except Exception as err:
             _LOGGER.exception("Fehler bei der Kommunikation mit PlantBot:")
+            self.last_update_success = False
             raise UpdateFailed(f"Fehler: {err}")
 

@@ -65,6 +65,8 @@ class PlantBotButton(ButtonEntity):
             "name": self.station_name,
             "manufacturer": "PlantBot",
             "model": "Bewässerungsstation",
+            "configuration_url": f"http://{self.station_ip}"
+
         }    
     def __init__(self, coordinator, hass, station_name, station_id, station_ip, button_key, config, server_url):
         self._coordinator = coordinator
