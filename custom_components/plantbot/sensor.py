@@ -11,9 +11,9 @@ _LOGGER = logging.getLogger(__name__)
 from .const import DOMAIN
 
 SENSOR_TYPES = {
-    "temperature": {"name": "Temperatur", "unit": UnitOfTemperature.CELSIUS,"device_class":SensorDeviceClass.TEMPERATURE ,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
-    "humidity": {"name": "Feuchtigkeit", "unit": PERCENTAGE,"device_class":SensorDeviceClass.HUMIDITY,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
-    "pressure": {"name": "Luftdruck", "unit": UnitOfPressure.HPA,"device_class":None, "state_class": SensorStateClass.MEASUREMENT,"optional": True},
+    "temperature": {"name": "Temperatur", "unit": UnitOfTemperature.CELSIUS,"device_class":SensorDeviceClass.TEMPERATURE ,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"ignore_zero": True},
+    "humidity": {"name": "Feuchtigkeit", "unit": PERCENTAGE,"device_class":SensorDeviceClass.HUMIDITY,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"ignore_zero": True},
+    "pressure": {"name": "Luftdruck", "unit": UnitOfPressure.HPA,"device_class":None, "state_class": SensorStateClass.MEASUREMENT,"optional": True,"ignore_zero": True},
     "water_level": {"name": "Wasserstand", "unit": PERCENTAGE,"device_class":None,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
     "jobs": {"name": "Jobs", "unit": "count","device_class":None  , "state_class": SensorStateClass.MEASUREMENT,"optional": True},
     "flow": {"name": "Flow", "unit": None,"device_class":None, "state_class": SensorStateClass.TOTAL,"optional": True},
@@ -114,7 +114,11 @@ class PlantbotSensor(SensorEntity):
                 return modbus.get(addr, {}).get(key_type)
             return None
         else:
-            return self.coordinator.data[self.station_id].get(self.key)
+            value = self.coordinator.data[self.station_id].get(self.key)
+            sensor_conf = SENSOR_TYPES.get(self.key, {})
+            if sensor_conf.get("ignore_zero") and value == 0:
+                return None
+            return value
 
     @property
     def available(self):
