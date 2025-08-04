@@ -122,14 +122,29 @@ class PlantbotValve(ValveEntity):
         }
     
     async def open_for_seconds(self, duration):
-        url = f"{self.coordinator.server_url}/HA/valve/{self.valve_id}/open?seconds={duration}"
-        async with self.coordinator.session.get(url) as resp:
-            if resp.status != 200:
-                text = await resp.text()
-                _LOGGER.error("Fehler beim Öffnen des Ventils (%s): HTTP %s – %s", valve_id, resp.status, text)
-            else:
-                _LOGGER.debug("Ventil %s erfolgreich geöffnet", valve_id)
-                await coordinator.async_request_refresh()
+        url = f"{self.coordinator.server_url}/HA/valve/open?id={self.valve_id}&duration={duration}"
+
+        _LOGGER.warning(url)
+
+        try:
+            async with self.coordinator.session.get(url, ssl=False, timeout=10) as resp:
+                if resp.status != 200:
+                    raise HomeAssistantError(f"Fehler vom Server: HTTP {resp.status}")
+                _LOGGER.debug("Serverantwort (%s): %s", resp.status, await resp.text())
+                await self.coordinator.async_request_refresh()
+
+        except aiohttp.ClientConnectionError:
+            raise HomeAssistantError("Verbindung zum PlantBot-Server fehlgeschlagen (nicht erreichbar)")
+
+        except aiohttp.ClientResponseError as e:
+            raise HomeAssistantError(f"Antwortfehler: {e.status} {e.message}")
+
+        except asyncio.TimeoutError:
+            raise HomeAssistantError("Zeitüberschreitung beim Warten auf Antwort vom Server")
+
+        except Exception as e:
+            _LOGGER.exception("Unerwarteter Fehler bei Kommunikation mit dem Server:")
+            raise HomeAssistantError(f"Unerwarteter Fehler: {e}")    
 
     async def open_for_volume(self,volume):
         url = f"{self.coordinator.server_url}/HA/valve/open?id={self.valve_id}&volume={volume}"

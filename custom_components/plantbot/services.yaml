@@ -2,12 +2,17 @@ open_for_seconds:
   name: Öffne für Sekunden
   description: Öffnet ein Ventil für eine bestimmte Zeitdauer.
   fields:
-    entity_id:
+    valve:
+      name: Ventil
+      description: Wähle ein Ventil aus deiner Installation
       required: true
       selector:
         entity:
           domain: valve
+          integration: plantbot
     duration:
+      name: Zeit
+      description: Wie lange soll gegossen werden?    
       required: true
       example: 10
       selector:
@@ -29,6 +34,8 @@ open_for_volume:
           domain: valve
           integration: plantbot
     volume:
+      name: Volumen
+      description: Welches Volumen soll gegossen werden?
       required: true
       example: 5
       selector:

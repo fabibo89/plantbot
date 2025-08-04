@@ -30,15 +30,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def handle_open_for_seconds(call):
     valve_id = call.data["valve"]
-    volume = call.data["volume"]
+    duration = call.data["duration"]
     entity = ENTITIES.get(valve_id)
-
-
-    _LOGGER.debug("Alle registrierten Plantbot-Ventile:\n%s", "\n".join(ENTITIES.keys()))
-
+    #_LOGGER.debug("Alle registrierten Plantbot-Ventile:\n%s", "\n".join(ENTITIES.keys()))
     if entity:
         _LOGGER.debug("Komponente gefunden %s", entity.valve_id)
-        await entity.open_for_seconds(volume)
+        await entity.open_for_seconds(duration)
     else:
         _LOGGER.error("Komponente nicht gefunden %s ",valve_id)
 
@@ -46,10 +43,7 @@ async def handle_open_for_volume(call):
     valve_id = call.data["valve"]
     volume = call.data["volume"]
     entity = ENTITIES.get(valve_id)
-
-
-    _LOGGER.debug("Alle registrierten Plantbot-Ventile:\n%s", "\n".join(ENTITIES.keys()))
-
+    #_LOGGER.debug("Alle registrierten Plantbot-Ventile:\n%s", "\n".join(ENTITIES.keys()))
     if entity:
         _LOGGER.debug("Komponente gefunden %s", entity.valve_id)
         await entity.open_for_volume(volume)

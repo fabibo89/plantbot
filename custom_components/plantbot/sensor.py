@@ -20,6 +20,7 @@ SENSOR_TYPES = {
     "lastVolume": {"name": "Volume", "unit": 'ml',"device_class":None ,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
     "status": {"name": "Status", "unit": None,"device_class":None, "optional": False},
     "wifi": {"name": "WIFI", "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,"device_class":SensorDeviceClass.SIGNAL_STRENGTH,"state_class": SensorStateClass.MEASUREMENT, "optional": False},
+    "runtime": {"name": "Runtime", "unit": "s" ,"device_class":None,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
 }
 
 async def async_setup_entry(hass, entry, async_add_entities):
