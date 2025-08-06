@@ -11,8 +11,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GH_PAT }}
+	with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # wichtig für Commit & Push
 
       - name: Extract version from release tag
         id: get_version
