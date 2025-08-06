@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-	with:
+        with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0  # wichtig für Commit & Push
 
@@ -19,6 +19,7 @@ jobs:
         id: get_version
         run: |
           VERSION=${GITHUB_REF##*/}
+          VERSION=${VERSION#v}
           echo "Extracted version: $VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
