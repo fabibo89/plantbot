@@ -66,7 +66,9 @@ class PlantbotCoordinator(DataUpdateCoordinator):
                                         "latestVersion": device_data.get("latestVersion"),
                                         "update_needed": device_data.get("update_needed"),                                        
                                         "modbusSens": device_data.get("modbusSens") or {} ,                                     
-                                        "runtime": int(device_data.get("runtime", 0) / 1000)
+                                        "runtime": round(float(device_data.get("runtime", 0))/60.00, 2),
+                                        "last_reset_reason": device_data.get("last_reset_reason"),
+                                        "memory_usage": device_data.get("memory_usage"),
                                     })
 
                                     #_LOGGER.debug("Device Data:\n%s", json.dumps(device_data, indent=2))

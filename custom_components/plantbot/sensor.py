@@ -20,7 +20,9 @@ SENSOR_TYPES = {
     "lastVolume": {"name": "Volume", "unit": 'ml',"device_class":None ,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
     "status": {"name": "Status", "unit": None,"device_class":None, "optional": False},
     "wifi": {"name": "WIFI", "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,"device_class":SensorDeviceClass.SIGNAL_STRENGTH,"state_class": SensorStateClass.MEASUREMENT, "optional": False},
-    "runtime": {"name": "Runtime", "unit": "s" ,"device_class":None,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
+    "runtime": {"name": "Runtime", "unit": "min" ,"device_class":SensorDeviceClass.DURATION,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
+    "last_reset_reason": {"name": "Letzter Reset Grund", "unit": None, "device_class": None, "optional": True,"icon": "mdi:restart"},
+    "memory_usage": {"name": "Speicherauslastung", "unit": None,"device_class": None,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"icon": "mdi:memory"},
 }
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -98,6 +100,7 @@ class PlantbotSensor(SensorEntity):
         self._attr_device_class = props["device_class"]
         self._attr_state_class = props.get("state_class")
         self.station_ip = coordinator.data[self.station_id].get("ip")
+        self._attr_icon = props.get("icon")
         _LOGGER.debug("##### IP=%s", self.station_ip)
 
 
