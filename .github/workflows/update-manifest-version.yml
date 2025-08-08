@@ -1,41 +1,35 @@
-name: Update manifest version
+name: Update Manifest Version
 
 on:
   release:
     types: [published]
 
 jobs:
-  update-manifest:
+  update-manifest-version:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout main branch
-        run: |
-          git fetch origin main
-          git checkout main
-
-      - name: Extract version from release tag
+      - name: Get version from tag
         id: get_version
-        run: |
-          VERSION=${GITHUB_REF##*/}
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Update manifest.json version
         run: |
-          jq '.version = "${{ steps.get_version.outputs.version }}"' custom_components/plantbot/manifest.json > tmp.json
-          mv tmp.json custom_components/plantbot/manifest.json
+          jq --arg ver "${{ steps.get_version.outputs.version }}" '.version = $ver' manifest.json > manifest_tmp.json
+          mv manifest_tmp.json manifest.json
 
       - name: Commit changes
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "Update manifest version to ${{ steps.get_version.outputs.version }}" || echo "No changes to commit"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add manifest.json
+          git commit -m "Update manifest version to ${{ steps.get_version.outputs.version }}" || echo "No changes to commit"
 
-      - name: Push changes to main
+      - name: Push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git push origin main
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          git push origin HEAD:main
