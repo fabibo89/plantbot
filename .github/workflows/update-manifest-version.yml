@@ -1,4 +1,4 @@
-name: Update Manifest Version
+name: Update Manifest Versionx
 
 on:
   release:
