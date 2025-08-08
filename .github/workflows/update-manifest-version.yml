@@ -17,14 +17,14 @@ jobs:
 
       - name: Update manifest.json version
         run: |
-          jq --arg ver "${{ steps.get_version.outputs.version }}" '.version = $ver' manifest.json > manifest_tmp.json
-          mv manifest_tmp.json manifest.json
+          jq --arg ver "${{ steps.get_version.outputs.version }}" '.version = $ver' custom_components/plantbot/manifest.json > custom_components/plantbot/manifest_tmp.json
+          mv custom_components/plantbot/manifest_tmp.json custom_components/plantbot/manifest.json
 
       - name: Commit changes
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git add manifest.json
+          git add custom_components/plantbot/manifest.json
           git commit -m "Update manifest version to ${{ steps.get_version.outputs.version }}" || echo "No changes to commit"
 
       - name: Push changes
