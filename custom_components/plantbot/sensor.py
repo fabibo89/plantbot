@@ -13,17 +13,19 @@ from .const import DOMAIN
 SENSOR_TYPES = {
     "temperature": {"name": "Temperatur", "unit": UnitOfTemperature.CELSIUS,"device_class":SensorDeviceClass.TEMPERATURE ,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"ignore_zero": True},
     "humidity": {"name": "Feuchtigkeit", "unit": PERCENTAGE,"device_class":SensorDeviceClass.HUMIDITY,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"ignore_zero": True},
-    "pressure": {"name": "Luftdruck", "unit": UnitOfPressure.HPA,"device_class":None, "state_class": SensorStateClass.MEASUREMENT,"optional": True,"ignore_zero": True},
+    "pressure": {"name": "Luftdruck", "unit": UnitOfPressure.HPA,"device_class":None, "state_class": SensorStateClass.MEASUREMENT,"optional": True,"ignore_zero": True,"icon": "mdi:gauge"},
     "water_level": {"name": "Wasserstand", "unit": PERCENTAGE,"device_class":None,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
-    "jobs": {"name": "Jobs", "unit": "count","device_class":None  , "state_class": SensorStateClass.MEASUREMENT,"optional": True},
-    "flow": {"name": "Flow", "unit": None,"device_class":None, "state_class": SensorStateClass.TOTAL,"optional": True},
-    "lastVolume": {"name": "Volume", "unit": 'ml',"device_class":None ,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
-    "status": {"name": "Status", "unit": None,"device_class":None, "optional": False},
+    "jobs": {"name": "Jobs", "unit": "count","device_class":None  , "state_class": SensorStateClass.MEASUREMENT,"optional": True,"icon": "mdi:playlist-play"},
+    "flow": {"name": "Flow", "unit": None,"device_class":None, "state_class": SensorStateClass.TOTAL,"optional": True,"icon": "mdi:water-pump"},
+    "lastVolume": {"name": "Volume", "unit": 'ml',"device_class":None ,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"icon": "mdi:water"},
+    "status": {"name": "Status", "unit": None,"device_class":None, "optional": False,"icon": "mdi:information"},
     "wifi": {"name": "WIFI", "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,"device_class":SensorDeviceClass.SIGNAL_STRENGTH,"state_class": SensorStateClass.MEASUREMENT, "optional": False},
     "runtime": {"name": "Runtime", "unit": "min" ,"device_class":SensorDeviceClass.DURATION,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
+    "water_runtime": {"name": "Wasser Runtime", "unit": "s" ,"device_class":SensorDeviceClass.DURATION,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"icon": "mdi:timer-sand"},
     "last_reset_reason": {"name": "Letzter Reset Grund", "unit": None, "device_class": None, "optional": True,"icon": "mdi:restart"},
     "memory_usage": {"name": "Speicherauslastung", "unit": None,"device_class": None,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"icon": "mdi:memory"},
 }
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[DOMAIN][entry.entry_id]

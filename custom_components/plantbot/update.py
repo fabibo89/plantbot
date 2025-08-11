@@ -94,7 +94,7 @@ class PlantbotFirmwareUpdate(UpdateEntity):
 
     @property
     def release_url(self) -> str | None:
-        return "https://github.com/deinprojekt/releases"
+        return "https://github.com/fabibo89/plantbot-OTA/releases"
 
     async def async_update(self):
         await self.coordinator.async_request_refresh()
