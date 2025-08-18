@@ -1,0 +1,24 @@
+# Standard: alles ignorieren
+*
+
+# Diese Dateien/DIRS sollen versioniert werden
+!/.gitignore
+!/README.md
+!/LICENSE
+!/hacs.json
+
+# Elternordner erlauben
+!/custom_components/
+!/brands/
+
+# Zuerst Inhalte wieder ignorieren…
+/custom_components/*
+/brands/*
+
+# …und dann nur deine Integration/Brands erlauben
+!/custom_components/plantbot/**
+!/brands/plantbot/**
+
+# macOS-Kleinkram sicherheitshalber ignorieren
+.DS_Store
+
