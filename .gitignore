@@ -7,6 +7,10 @@
 !/LICENSE
 !/hacs.json
 
+# GitHub Actions Workflows erlauben
+!/.github/
+!/.github/workflows/**
+
 # Elternordner erlauben und Integration whitelisten
 !/custom_components/
 !/custom_components/plantbot/**
