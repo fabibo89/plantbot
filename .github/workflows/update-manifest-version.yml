@@ -3,6 +3,7 @@ name: Update Manifest Version
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -27,7 +28,7 @@ jobs:
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
-          git add custom_components/plantbot/manifest.json
+          git add -f custom_components/plantbot/manifest.json
           git commit -m "Update manifest version to ${{ steps.get_version.outputs.version }}" || echo "No changes to commit"
 
       - name: Push changes to main branch
