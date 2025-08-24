@@ -15,7 +15,7 @@ SENSOR_TYPES = {
     "humidity": {"name": "Feuchtigkeit", "unit": PERCENTAGE,"device_class":SensorDeviceClass.HUMIDITY,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"ignore_zero": True},
     "pressure": {"name": "Luftdruck", "unit": UnitOfPressure.HPA,"device_class":None, "state_class": SensorStateClass.MEASUREMENT,"optional": True,"ignore_zero": True,"icon": "mdi:gauge"},
     "water_level": {"name": "Wasserstand", "unit": PERCENTAGE,"device_class":None,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
-    "jobs": {"name": "Jobs", "unit": "count","device_class":None  , "state_class": SensorStateClass.MEASUREMENT,"optional": True,"icon": "mdi:playlist-play"},
+    "jobs": {"name": "Jobs", "unit": "count","device_class":None  , "state_class": SensorStateClass.MEASUREMENT,"optional": True,"icon": "mdi:playlist-play","ignore_zero": False},
     "flow": {"name": "Flow", "unit": None,"device_class":None, "state_class": SensorStateClass.TOTAL,"optional": True,"icon": "mdi:water-pump"},
     "lastVolume": {"name": "Volume", "unit": 'ml',"device_class":None ,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"icon": "mdi:water"},
     "status": {"name": "Status", "unit": None,"device_class":None, "optional": False,"icon": "mdi:information"},
@@ -36,7 +36,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         for key, props in SENSOR_TYPES.items():
             value = station.get(key)
             if not props["optional"] or key in station:
-                if props["optional"] and (value is None or value == "" or value == "null"):
+                if props["optional"] and (props["ignore_zero"] == True) and (value is None or value == "" or value == "null"):
                     continue  # Überspringe leere Temperaturdaten
                 _LOGGER.debug(
                 "Füge Sensor hinzu: station_id=%s, typ=%s, name=%s",
