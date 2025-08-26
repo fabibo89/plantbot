@@ -10,20 +10,48 @@ _LOGGER = logging.getLogger(__name__)
 
 from .const import DOMAIN
 
+# --- PlantBot minimal validator (added) ---
+def _plantbot_value_is_valid(props, value):
+    # Basic empty checks
+    if value is None or (isinstance(value, str) and value.strip().lower() in ("", "null", "none")):
+        return False
+    # Try numeric
+    num = None
+    try:
+        num = float(value)
+    except (TypeError, ValueError):
+        pass
+    # Zero handling
+    if props.get("ignore_zero", False) and num == 0.0:
+        return False
+    # Range handling
+    rng = props.get("valid_range")
+    if rng and isinstance(rng, (tuple, list)) and num is not None:
+        try:
+            lo, hi = rng
+            if num < lo or num > hi:
+                return False
+        except Exception:
+            pass
+    return True
+# --- end minimal validator ---
+
+
 SENSOR_TYPES = {
-    "temperature": {"name": "Temperatur", "unit": UnitOfTemperature.CELSIUS,"device_class":SensorDeviceClass.TEMPERATURE ,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"ignore_zero": True},
-    "humidity": {"name": "Feuchtigkeit", "unit": PERCENTAGE,"device_class":SensorDeviceClass.HUMIDITY,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"ignore_zero": True},
-    "pressure": {"name": "Luftdruck", "unit": UnitOfPressure.HPA,"device_class":None, "state_class": SensorStateClass.MEASUREMENT,"optional": True,"ignore_zero": True,"icon": "mdi:gauge"},
-    "water_level": {"name": "Wasserstand", "unit": PERCENTAGE,"device_class":None,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
+    
+    "temperature": {"name": "Temperatur", "unit": UnitOfTemperature.CELSIUS,"device_class":SensorDeviceClass.TEMPERATURE ,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"ignore_zero": True, 'valid_range': (-30.0, 60.0)},
+    "humidity": {"name": "Feuchtigkeit", "unit": PERCENTAGE,"device_class":SensorDeviceClass.HUMIDITY,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"ignore_zero": True, 'valid_range': (0.0, 100.0)},
+    "pressure": {"name": "Luftdruck", "unit": UnitOfPressure.HPA,"device_class":None, "state_class": SensorStateClass.MEASUREMENT,"optional": True,"ignore_zero": True,"icon": "mdi:gauge", 'valid_range': (800.0, 1100.0)},
+    "water_level": {"name": "Wasserstand", "unit": PERCENTAGE,"device_class":None,"state_class": SensorStateClass.MEASUREMENT, "optional": True, 'valid_range': (0.0, 100.0)},
     "jobs": {"name": "Jobs", "unit": "count","device_class":None  , "state_class": SensorStateClass.MEASUREMENT,"optional": True,"icon": "mdi:playlist-play","ignore_zero": False},
     "flow": {"name": "Flow", "unit": None,"device_class":None, "state_class": SensorStateClass.TOTAL,"optional": True,"icon": "mdi:water-pump"},
     "lastVolume": {"name": "Volume", "unit": 'ml',"device_class":None ,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"icon": "mdi:water"},
     "status": {"name": "Status", "unit": None,"device_class":None, "optional": False,"icon": "mdi:information"},
-    "wifi": {"name": "WIFI", "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,"device_class":SensorDeviceClass.SIGNAL_STRENGTH,"state_class": SensorStateClass.MEASUREMENT, "optional": False},
+    "wifi": {"name": "WIFI", "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,"device_class":SensorDeviceClass.SIGNAL_STRENGTH,"state_class": SensorStateClass.MEASUREMENT, "optional": False, 'valid_range': (-100.0, -20.0)},
     "runtime": {"name": "Runtime", "unit": "min" ,"device_class":SensorDeviceClass.DURATION,"state_class": SensorStateClass.MEASUREMENT, "optional": True},
     "water_runtime": {"name": "Wasser Runtime", "unit": "s" ,"device_class":SensorDeviceClass.DURATION,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"icon": "mdi:timer-sand"},
     "last_reset_reason": {"name": "Letzter Reset Grund", "unit": None, "device_class": None, "optional": True,"icon": "mdi:restart"},
-    "memory_usage": {"name": "Speicherauslastung", "unit": None,"device_class": None,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"icon": "mdi:memory"},
+    "memory_usage": {"name": "Speicherauslastung", "unit": None,"device_class": None,"state_class": SensorStateClass.MEASUREMENT, "optional": True,"icon": "mdi:memory"}
 }
 
 
@@ -36,7 +64,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         for key, props in SENSOR_TYPES.items():
             value = station.get(key)
             if not props["optional"] or key in station:
-                if props["optional"] and (props["ignore_zero"] == True) and (value is None or value == "" or value == "null"):
+                if props.get('optional', False) and not _plantbot_value_is_valid(props, value):
                     continue  # Überspringe leere Temperaturdaten
                 _LOGGER.debug(
                 "Füge Sensor hinzu: station_id=%s, typ=%s, name=%s",
@@ -103,13 +131,15 @@ class PlantbotSensor(SensorEntity):
         self._attr_state_class = props.get("state_class")
         self.station_ip = coordinator.data[self.station_id].get("ip")
         self._attr_icon = props.get("icon")
+        self._props = props
         _LOGGER.debug("##### IP=%s", self.station_ip)
 
 
     @property
     def native_value(self):
         if not self.available:
-            return None        
+            return None
+
         if "soil_hum" in self.key or "soil_temp" in self.key:
             # Dynamische Modbus-Sensoren
             modbus = self.coordinator.data[self.station_id].get("modbusSens", {})
@@ -117,13 +147,23 @@ class PlantbotSensor(SensorEntity):
             if len(parts) == 2:
                 addr = parts[1]
                 key_type = "hum" if "hum" in self.key else "temp"
-                return modbus.get(addr, {}).get(key_type)
-            return None
+                value = modbus.get(addr, {}).get(key_type)
+            else:
+                value = None
         else:
             value = self.coordinator.data[self.station_id].get(self.key)
-            sensor_conf = SENSOR_TYPES.get(self.key, {})
-            if value == 0:
-                return None
+
+        # Validierung (0 ist erlaubt, sofern ignore_zero=False)
+        if not _plantbot_value_is_valid(self._props, value):
+            return None
+
+        # Zahl zurückgeben, ansonsten den Rohwert
+        if isinstance(value, int):
+            return value
+        try:
+            num = float(value)
+            return int(num) if num.is_integer() else num
+        except (TypeError, ValueError):
             return value
 
     @property
