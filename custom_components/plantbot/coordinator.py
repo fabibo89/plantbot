@@ -69,6 +69,7 @@ class PlantbotCoordinator(DataUpdateCoordinator):
                                         "runtime": round(float(device_data.get("runtime", 0))/60.00, 2),
                                         "last_reset_reason": device_data.get("last_reset_reason"),
                                         "memory_usage": device_data.get("memory_usage"),
+                                        "flow": device_data.get("flow"),
                                     })
 
                                     #_LOGGER.debug("Device Data:\n%s", json.dumps(device_data, indent=2))

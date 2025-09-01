@@ -17,3 +17,6 @@
 
 # macOS
 .DS_Store
+/custom_components/plantbot/__pycache__
+/custom_components/plantbot/__pycache__
+/custom_components/plantbot/__pycache__
