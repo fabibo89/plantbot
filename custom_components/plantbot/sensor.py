@@ -88,7 +88,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                             "optional": True,
                             "device_class": SensorDeviceClass.HUMIDITY,
                             "state_class": SensorStateClass.MEASUREMENT,
-                            "ignore_zero": True,
                             "valid_range": (5.0, 100.0)
 
                         },
@@ -129,11 +128,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
                             "optional": True,
                             "device_class": None,                 # (optional) HA hat meist kein DeviceClass dafür
                             "state_class": SensorStateClass.MEASUREMENT,
+                            "ignore_zero": True,
+                            "valid_range": (5.0, 100.0)
                         },
                         station["name"]
                     )
                 )
-
+                
     async_add_entities(entities)
 
 class PlantbotSensor(SensorEntity):
@@ -161,20 +162,18 @@ class PlantbotSensor(SensorEntity):
         if not self.available:
             return None
 
-        if "soil_hum" in self.key or "soil_temp" in self.key or "soil_cond" in self.key:
+        if "soil_hum" in self.key or "soil_temp" in self.key:
+            # Dynamische Modbus-Sensoren
             modbus = self.coordinator.data[self.station_id].get("modbusSens", {})
             parts = self.key.rsplit("_", 1)
             if len(parts) == 2:
                 addr = parts[1]
-                if "hum" in self.key:
-                    key_type = "hum"
-                elif "temp" in self.key:
-                    key_type = "temp"
-                else:
-                    key_type = "cond"   
+                key_type = "hum" if "hum" in self.key else "temp"
                 value = modbus.get(addr, {}).get(key_type)
             else:
                 value = None
+        else:
+            value = self.coordinator.data[self.station_id].get(self.key)
 
         # Validierung (0 ist erlaubt, sofern ignore_zero=False)
         if not _plantbot_value_is_valid(self._props, value):
