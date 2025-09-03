@@ -128,8 +128,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
                             "optional": True,
                             "device_class": None,                 # (optional) HA hat meist kein DeviceClass dafür
                             "state_class": SensorStateClass.MEASUREMENT,
-                            "ignore_zero": True,
-                            "valid_range": (5.0, 100.0)
+                            #"ignore_zero": True,
+                            #"valid_range": (5.0, 100.0)
                         },
                         station["name"]
                     )
@@ -162,16 +162,21 @@ class PlantbotSensor(SensorEntity):
         if not self.available:
             return None
 
-        if "soil_hum" in self.key or "soil_temp" in self.key:
-            # Dynamische Modbus-Sensoren
+        # Modbus Bodenfeuchtigkeit
+        if self.key.startswith("soil_hum_"):
             modbus = self.coordinator.data[self.station_id].get("modbusSens", {})
-            parts = self.key.rsplit("_", 1)
-            if len(parts) == 2:
-                addr = parts[1]
-                key_type = "hum" if "hum" in self.key else "temp"
-                value = modbus.get(addr, {}).get(key_type)
-            else:
-                value = None
+            addr = self.key.rsplit("_", 1)[-1]
+            value = modbus.get(addr, {}).get("hum")
+        # Modbus Bodentemperatur
+        elif self.key.startswith("soil_temp_"):
+            modbus = self.coordinator.data[self.station_id].get("modbusSens", {})
+            addr = self.key.rsplit("_", 1)[-1]
+            value = modbus.get(addr, {}).get("temp")
+        # Modbus Bodenleitfähigkeit
+        elif self.key.startswith("soil_cond_"):
+            modbus = self.coordinator.data[self.station_id].get("modbusSens", {})
+            addr = self.key.rsplit("_", 1)[-1]
+            value = modbus.get(addr, {}).get("cond")
         else:
             value = self.coordinator.data[self.station_id].get(self.key)
 
